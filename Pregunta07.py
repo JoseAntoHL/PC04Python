@@ -1,42 +1,41 @@
-import requests
 import sqlite3
+import requests
+from datetime import datetime
 
-def obtener_precios_dolar(year):
-    url = f"https://api.apis.net.pe/v1/tipo-cambio/{year}/dolares"
+def obtener_tipo_cambio():
+    url = "https://api.apis.net.pe/v2/sunat/tipo-cambio"
     response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        return data
-    else:
-        print(f"Error al obtener los datos para el año {year}")
-        return None
+    data = response.json()
+    return data
 
-def crear_base_datos():
+def crear_tabla_sunat():
     conn = sqlite3.connect('base.db')
-    cursor = conn.cursor()
-    cursor.execute('''CREATE TABLE IF NOT EXISTS sunat_info
-                  (fecha TEXT, compra REAL, venta REAL)''')
+    c = conn.cursor()
+    c.execute('''CREATE TABLE IF NOT EXISTS sunat_info
+                 (fecha TEXT, compra REAL, venta REAL)''')
     conn.commit()
     conn.close()
 
-def insertar_datos(fecha, compra, venta):
+def insertar_datos_sunat(fecha, compra, venta):
     conn = sqlite3.connect('base.db')
-    cursor = conn.cursor()
-    cursor.execute("INSERT INTO sunat_info (fecha, compra, venta) VALUES (?, ?, ?)", (fecha, compra, venta))
+    c = conn.cursor()
+    c.execute("INSERT INTO sunat_info (fecha, compra, venta) VALUES (?, ?, ?)", (fecha, compra, venta))
     conn.commit()
     conn.close()
 
-crear_base_datos()
-for month in range(1, 13):
-    data = obtener_precios_dolar(f"2023-{month:02d}")
-    if data:
-        for item in data['data']:
-            insertar_datos(item['fecha'], item['compra'], item['venta'])
+# Obtener los datos y almacenarlos en la base de datos
+crear_tabla_sunat()
+tipo_cambio_data = obtener_tipo_cambio()
+fecha = datetime.now().strftime("%Y-%m-%d")
+compra = tipo_cambio_data['cambio'][0]['compra']
+venta = tipo_cambio_data['cambio'][0]['venta']
+insertar_datos_sunat(fecha, compra, venta)
 
+# Mostrar el contenido de la tabla
 conn = sqlite3.connect('base.db')
-cursor = conn.cursor()
-cursor.execute("SELECT * FROM sunat_info")
-rows = cursor.fetchall()
+c = conn.cursor()
+c.execute("SELECT * FROM sunat_info")
+rows = c.fetchall()
 for row in rows:
     print(row)
 conn.close()
