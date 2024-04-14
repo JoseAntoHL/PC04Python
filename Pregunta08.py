@@ -27,7 +27,6 @@ def insertar_datos_bitcoin(fecha, usd, gbp, eur, pen):
     conn.commit()
     conn.close()
 
-# Obtener los precios y calcular el precio en PEN y EUR
 crear_tabla_bitcoin()
 bitcoin_data = obtener_precios_bitcoin()
 fecha = bitcoin_data['time']['updated']
@@ -37,10 +36,8 @@ eur = bitcoin_data['bpi']['EUR']['rate_float']
 tipo_cambio_pen = obtener_tipo_cambio_pen(fecha.split()[0])
 pen = usd * tipo_cambio_pen
 
-# Insertar los datos en la base de datos
 insertar_datos_bitcoin(fecha, usd, gbp, eur, pen)
 
-# Mostrar el contenido de la tabla
 conn = sqlite3.connect('base.db')
 c = conn.cursor()
 c.execute("SELECT * FROM bitcoin")
