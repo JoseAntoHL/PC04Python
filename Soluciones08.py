@@ -43,14 +43,17 @@ def insertar_datos(fecha, usd, gbp, eur, pen):
 # Obtener los precios del bitcoin y guardarlos en la base de datos
 crear_tabla_bitcoin()
 bitcoin_data = obtener_precios_bitcoin()
-if bitcoin_data:
-    fecha = bitcoin_data['time']['updated']
-    usd = bitcoin_data['USD']['rate_float']
-    gbp = bitcoin_data['GBP']['rate_float']
-    eur = bitcoin_data['EUR']['rate_float']
-    tipo_cambio_pen = obtener_tipo_cambio_pen(fecha.split()[0])
-    pen = usd * tipo_cambio_pen
-    insertar_datos(fecha, usd, gbp, eur, pen)
+if bitcoin_data and 'bpi' in bitcoin_data:
+    fecha = bitcoin_data.get('time', {}).get('updated', 'Fecha desconocida')
+    if 'USD' in bitcoin_data['bpi']:
+        usd = bitcoin_data['bpi']['USD']['rate_float']
+        gbp = bitcoin_data['bpi']['GBP']['rate_float']
+        eur = bitcoin_data['bpi']['EUR']['rate_float']
+        tipo_cambio_pen = obtener_tipo_cambio_pen(fecha.split()[0])
+        pen = usd * tipo_cambio_pen
+        insertar_datos(fecha, usd, gbp, eur, pen)
+
+
 
 # Consultar la base de datos para calcular el precio de comprar 10 bitcoins en PEN y EUR
 conn = sqlite3.connect('base.db')
